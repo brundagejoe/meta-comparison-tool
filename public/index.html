@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Tag Comparison Tool</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Meta Tag Comparison Tool</h1>
+            <p>Compare meta tags between two domains across multiple URL paths</p>
+        </header>
+
+        <form id="compareForm">
+            <div class="form-group">
+                <label for="baseUrl1">Base URL 1:</label>
+                <input
+                    type="text"
+                    id="baseUrl1"
+                    name="baseUrl1"
+                    placeholder="https://example.com"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="baseUrl2">Base URL 2:</label>
+                <input
+                    type="text"
+                    id="baseUrl2"
+                    name="baseUrl2"
+                    placeholder="https://example2.com"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="paths">URL Paths (one per line):</label>
+                <textarea
+                    id="paths"
+                    name="paths"
+                    rows="10"
+                    placeholder="/page1&#10;/page2&#10;/page3"
+                    required
+                ></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn">Compare Meta Tags</button>
+        </form>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Fetching and comparing meta tags...</p>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
