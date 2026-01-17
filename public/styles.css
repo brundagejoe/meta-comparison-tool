@@ -120,6 +120,34 @@ button[type="submit"]:disabled {
     100% { transform: rotate(360deg); }
 }
 
+.export-section {
+    text-align: center;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.export-btn {
+    padding: 12px 24px;
+    background-color: #27ae60;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.export-btn:hover {
+    background-color: #229954;
+}
+
+.export-feedback {
+    margin-left: 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .results {
     margin-top: 30px;
 }
@@ -140,6 +168,14 @@ button[type="submit"]:disabled {
     color: #2c3e50;
     font-size: 20px;
     margin-bottom: 10px;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-size: 18px;
+    margin: 25px 0 15px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #3498db;
 }
 
 .url-pair {
@@ -206,6 +242,14 @@ button[type="submit"]:disabled {
     margin-bottom: 15px;
     color: #2c3e50;
     padding-bottom: 10px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.column h4 {
+    font-size: 14px;
+    margin-bottom: 15px;
+    color: #2c3e50;
+    padding-bottom: 8px;
     border-bottom: 2px solid #ecf0f1;
 }
 

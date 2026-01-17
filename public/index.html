@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meta Tag Comparison Tool</title>
+    <title>Meta & Link Tag Comparison Tool</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Meta Tag Comparison Tool</h1>
-            <p>Compare meta tags between two domains across multiple URL paths</p>
+            <h1>Meta & Link Tag Comparison Tool</h1>
+            <p>Compare meta tags and link tags between two domains across multiple URL paths</p>
         </header>
 
         <form id="compareForm">
@@ -47,12 +47,17 @@
                 ></textarea>
             </div>
 
-            <button type="submit" id="submitBtn">Compare Meta Tags</button>
+            <button type="submit" id="submitBtn">Compare Tags</button>
         </form>
 
         <div id="loading" class="loading" style="display: none;">
             <div class="spinner"></div>
-            <p>Fetching and comparing meta tags...</p>
+            <p>Fetching and comparing tags...</p>
+        </div>
+
+        <div id="exportSection" class="export-section" style="display: none;">
+            <button id="exportBtn" class="export-btn">Export Differences to Markdown</button>
+            <span id="exportFeedback" class="export-feedback"></span>
         </div>
 
         <div id="results" class="results"></div>

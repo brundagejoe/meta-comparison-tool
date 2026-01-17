@@ -1,15 +1,16 @@
 # Meta Tag Comparison Tool
 
-A simple local web application to compare meta tags between two domains across multiple URL paths. Perfect for SEO analysis, migration validation, and content auditing.
+A simple local web application to compare meta tags and link tags between two domains across multiple URL paths. Perfect for SEO analysis, migration validation, and content auditing.
 
 ## Features
 
-- **Side-by-side comparison** of meta tags from two domains
+- **Side-by-side comparison** of meta tags and link tags from two domains
 - **Color-coded diff highlighting** for easy identification of differences
 - **Batch processing** of multiple URL paths
 - **Error handling** for 404s, timeouts, and network failures
 - **Concurrent fetching** for fast performance
 - **Clean, responsive UI** that works on desktop and mobile
+- **Comprehensive tag extraction** including stylesheets, canonical URLs, favicons, and more
 
 ## Prerequisites
 
@@ -62,18 +63,18 @@ Try these URLs to test the tool:
 
 ## Understanding the Results
 
-The tool categorizes meta tags into four types:
+The tool categorizes both meta tags and link tags into four types:
 
-- **Green** (Only in URL 1): Meta tags that exist only in the first URL
-- **Red** (Only in URL 2): Meta tags that exist only in the second URL
-- **Yellow** (Different): Meta tags with the same name/property but different values
-- **Gray** (Identical): Meta tags that are exactly the same in both URLs
+- **Green** (Only in URL 1): Tags that exist only in the first URL
+- **Red** (Only in URL 2): Tags that exist only in the second URL
+- **Yellow** (Different): Tags with the same name/property/rel but different values
+- **Gray** (Identical): Tags that are exactly the same in both URLs
 
 Each comparison shows:
 - The path being compared
 - Both full URLs with clickable links
-- Side-by-side meta tag comparison
-- Summary statistics (counts for each category)
+- Side-by-side meta tag comparison with summary statistics
+- Side-by-side link tag comparison with summary statistics
 - Error messages if URLs fail to load
 
 ## Technical Details
@@ -87,6 +88,7 @@ Each comparison shows:
 - 10-second timeout per URL fetch
 - Concurrent fetching using `Promise.all`
 - Extracts all meta tag attributes (name, property, content, charset, http-equiv, etc.)
+- Extracts all link tag attributes (rel, href, type, sizes, etc.)
 - CORS-free operation (backend handles all fetching)
 
 ### Performance
@@ -131,11 +133,13 @@ The tool exposes one API endpoint:
       "url1": {
         "url": "https://example.com/page1",
         "metaTags": [...],
+        "linkTags": [...],
         "error": null
       },
       "url2": {
         "url": "https://example2.com/page1",
         "metaTags": [...],
+        "linkTags": [...],
         "error": null
       }
     }

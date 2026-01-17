@@ -28,6 +28,27 @@ function extractMetaTags(html) {
   return metaTags;
 }
 
+function extractLinkTags(html) {
+  const $ = cheerio.load(html);
+  const linkTags = [];
+
+  $('link').each((i, elem) => {
+    const tag = {};
+    const attributes = elem.attribs;
+
+    Object.keys(attributes).forEach(attr => {
+      tag[attr] = attributes[attr];
+    });
+
+    // Filter out links with href containing "build"
+    if (Object.keys(tag).length > 0 && (!tag.href || !tag.href.includes('build'))) {
+      linkTags.push(tag);
+    }
+  });
+
+  return linkTags;
+}
+
 async function fetchUrl(url) {
   try {
     const controller = new AbortController();
@@ -46,16 +67,19 @@ async function fetchUrl(url) {
       return {
         url,
         metaTags: [],
+        linkTags: [],
         error: `HTTP ${response.status}: ${response.statusText}`
       };
     }
 
     const html = await response.text();
     const metaTags = extractMetaTags(html);
+    const linkTags = extractLinkTags(html);
 
     return {
       url,
       metaTags,
+      linkTags,
       error: null
     };
   } catch (error) {
@@ -67,6 +91,7 @@ async function fetchUrl(url) {
     return {
       url,
       metaTags: [],
+      linkTags: [],
       error: errorMessage
     };
   }
