@@ -18,8 +18,8 @@ async function handleSubmit(e) {
   const baseUrl2 = document.getElementById('baseUrl2').value.trim();
   const pathsText = document.getElementById('paths').value.trim();
 
-  if (!baseUrl1 || !baseUrl2 || !pathsText) {
-    alert('Please fill in all fields');
+  if ((!baseUrl1 && !baseUrl2) || !pathsText) {
+    alert('Please provide at least one URL and at least one path');
     return;
   }
 
@@ -229,23 +229,34 @@ function displayResults(comparisons) {
 
     const header = document.createElement('div');
     header.className = 'comparison-header';
-    header.innerHTML = `
-      <h2>Path: ${escapeHtml(comparison.path)}</h2>
-      <div class="url-pair">
+
+    const hasUrl1 = comparison.url1 && comparison.url1.url;
+    const hasUrl2 = comparison.url2 && comparison.url2.url;
+
+    let headerHTML = `<h2>Path: ${escapeHtml(comparison.path)}</h2><div class="url-pair">`;
+
+    if (hasUrl1) {
+      headerHTML += `
         <div class="url-info">
-          <strong>URL 1:</strong> <a href="${escapeHtml(comparison.url1.url)}" target="_blank">${escapeHtml(comparison.url1.url)}</a>
+          <strong>URL ${hasUrl2 ? '1' : ''}:</strong> <a href="${escapeHtml(comparison.url1.url)}" target="_blank">${escapeHtml(comparison.url1.url)}</a>
           ${comparison.url1.error ? `<span class="error-badge">Error: ${escapeHtml(comparison.url1.error)}</span>` : ''}
-        </div>
+        </div>`;
+    }
+
+    if (hasUrl2) {
+      headerHTML += `
         <div class="url-info">
-          <strong>URL 2:</strong> <a href="${escapeHtml(comparison.url2.url)}" target="_blank">${escapeHtml(comparison.url2.url)}</a>
+          <strong>URL ${hasUrl1 ? '2' : ''}:</strong> <a href="${escapeHtml(comparison.url2.url)}" target="_blank">${escapeHtml(comparison.url2.url)}</a>
           ${comparison.url2.error ? `<span class="error-badge">Error: ${escapeHtml(comparison.url2.error)}</span>` : ''}
-        </div>
-      </div>
-    `;
+        </div>`;
+    }
+
+    headerHTML += `</div>`;
+    header.innerHTML = headerHTML;
 
     comparisonDiv.appendChild(header);
 
-    if (comparison.url1.error && comparison.url2.error) {
+    if ((hasUrl1 && comparison.url1.error) && (hasUrl2 && comparison.url2.error)) {
       const errorDiv = document.createElement('div');
       errorDiv.className = 'error-both';
       errorDiv.textContent = 'Both URLs failed to load';
@@ -254,11 +265,35 @@ function displayResults(comparisons) {
       return;
     }
 
+    if (hasUrl1 && comparison.url1.error && !hasUrl2) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-both';
+      errorDiv.textContent = 'URL failed to load';
+      comparisonDiv.appendChild(errorDiv);
+      resultsDiv.appendChild(comparisonDiv);
+      return;
+    }
+
+    if (hasUrl2 && comparison.url2.error && !hasUrl1) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'error-both';
+      errorDiv.textContent = 'URL failed to load';
+      comparisonDiv.appendChild(errorDiv);
+      resultsDiv.appendChild(comparisonDiv);
+      return;
+    }
+
     // Compare meta tags
-    const metaDiff = compareMeta(comparison.url1.metaTags, comparison.url2.metaTags);
+    const url1MetaTags = (hasUrl1 && !comparison.url1.error) ? comparison.url1.metaTags : [];
+    const url2MetaTags = (hasUrl2 && !comparison.url2.error) ? comparison.url2.metaTags : [];
+    const metaDiff = compareMeta(url1MetaTags, url2MetaTags);
 
     // Compare link tags
-    const linkDiff = compareLinks(comparison.url1.linkTags, comparison.url2.linkTags);
+    const url1LinkTags = (hasUrl1 && !comparison.url1.error) ? comparison.url1.linkTags : [];
+    const url2LinkTags = (hasUrl2 && !comparison.url2.error) ? comparison.url2.linkTags : [];
+    const linkDiff = compareLinks(url1LinkTags, url2LinkTags);
+
+    const isSingleUrl = !hasUrl1 || !hasUrl2;
 
     // Display Meta Tags Section
     const metaSectionTitle = document.createElement('h3');
@@ -271,27 +306,34 @@ function displayResults(comparisons) {
 
     const metaLeftColumn = document.createElement('div');
     metaLeftColumn.className = 'column';
-    metaLeftColumn.innerHTML = '<h4>URL 1</h4>';
+    metaLeftColumn.innerHTML = hasUrl1 ? `<h4>URL ${isSingleUrl ? '' : '1'}</h4>` : '<h4>-</h4>';
 
     const metaRightColumn = document.createElement('div');
     metaRightColumn.className = 'column';
-    metaRightColumn.innerHTML = '<h4>URL 2</h4>';
+    metaRightColumn.innerHTML = hasUrl2 ? `<h4>URL ${isSingleUrl ? '' : '2'}</h4>` : '<h4>-</h4>';
 
-    renderTagDiff(metaDiff, metaLeftColumn, metaRightColumn, formatMetaTag);
+    renderTagDiff(metaDiff, metaLeftColumn, metaRightColumn, formatMetaTag, isSingleUrl);
 
     metaGridDiv.appendChild(metaLeftColumn);
-    metaGridDiv.appendChild(metaRightColumn);
+    if (!isSingleUrl) {
+      metaGridDiv.appendChild(metaRightColumn);
+    }
     comparisonDiv.appendChild(metaGridDiv);
 
     const metaSummary = document.createElement('div');
     metaSummary.className = 'comparison-summary';
-    metaSummary.innerHTML = `
-      <strong>Meta Tags:</strong>
-      <span class="only-left">${metaDiff.onlyLeft.length} only in URL 1</span> |
-      <span class="only-right">${metaDiff.onlyRight.length} only in URL 2</span> |
-      <span class="different">${metaDiff.different.length} different</span> |
-      <span class="identical">${metaDiff.identical.length} identical</span>
-    `;
+    if (isSingleUrl) {
+      const totalMeta = url1MetaTags.length + url2MetaTags.length;
+      metaSummary.innerHTML = `<strong>Meta Tags:</strong> <span class="identical">${totalMeta} total</span>`;
+    } else {
+      metaSummary.innerHTML = `
+        <strong>Meta Tags:</strong>
+        <span class="only-left">${metaDiff.onlyLeft.length} only in URL 1</span> |
+        <span class="only-right">${metaDiff.onlyRight.length} only in URL 2</span> |
+        <span class="different">${metaDiff.different.length} different</span> |
+        <span class="identical">${metaDiff.identical.length} identical</span>
+      `;
+    }
     comparisonDiv.appendChild(metaSummary);
 
     // Display Link Tags Section
@@ -305,81 +347,122 @@ function displayResults(comparisons) {
 
     const linkLeftColumn = document.createElement('div');
     linkLeftColumn.className = 'column';
-    linkLeftColumn.innerHTML = '<h4>URL 1</h4>';
+    linkLeftColumn.innerHTML = hasUrl1 ? `<h4>URL ${isSingleUrl ? '' : '1'}</h4>` : '<h4>-</h4>';
 
     const linkRightColumn = document.createElement('div');
     linkRightColumn.className = 'column';
-    linkRightColumn.innerHTML = '<h4>URL 2</h4>';
+    linkRightColumn.innerHTML = hasUrl2 ? `<h4>URL ${isSingleUrl ? '' : '2'}</h4>` : '<h4>-</h4>';
 
-    renderTagDiff(linkDiff, linkLeftColumn, linkRightColumn, formatLinkTag);
+    renderTagDiff(linkDiff, linkLeftColumn, linkRightColumn, formatLinkTag, isSingleUrl);
 
     linkGridDiv.appendChild(linkLeftColumn);
-    linkGridDiv.appendChild(linkRightColumn);
+    if (!isSingleUrl) {
+      linkGridDiv.appendChild(linkRightColumn);
+    }
     comparisonDiv.appendChild(linkGridDiv);
 
     const linkSummary = document.createElement('div');
     linkSummary.className = 'comparison-summary';
-    linkSummary.innerHTML = `
-      <strong>Link Tags:</strong>
-      <span class="only-left">${linkDiff.onlyLeft.length} only in URL 1</span> |
-      <span class="only-right">${linkDiff.onlyRight.length} only in URL 2</span> |
-      <span class="different">${linkDiff.different.length} different</span> |
-      <span class="identical">${linkDiff.identical.length} identical</span>
-    `;
+    if (isSingleUrl) {
+      const totalLink = url1LinkTags.length + url2LinkTags.length;
+      linkSummary.innerHTML = `<strong>Link Tags:</strong> <span class="identical">${totalLink} total</span>`;
+    } else {
+      linkSummary.innerHTML = `
+        <strong>Link Tags:</strong>
+        <span class="only-left">${linkDiff.onlyLeft.length} only in URL 1</span> |
+        <span class="only-right">${linkDiff.onlyRight.length} only in URL 2</span> |
+        <span class="different">${linkDiff.different.length} different</span> |
+        <span class="identical">${linkDiff.identical.length} identical</span>
+      `;
+    }
     comparisonDiv.appendChild(linkSummary);
 
     resultsDiv.appendChild(comparisonDiv);
   });
 }
 
-function renderTagDiff(diff, leftColumn, rightColumn, formatFunction) {
-  diff.onlyLeft.forEach(tag => {
-    const tagDiv = document.createElement('div');
-    tagDiv.className = 'meta-tag only-left';
-    tagDiv.innerHTML = formatFunction(tag);
-    leftColumn.appendChild(tagDiv);
+function renderTagDiff(diff, leftColumn, rightColumn, formatFunction, isSingleUrl = false) {
+  if (isSingleUrl) {
+    // For single URL, just show all tags in the active column
+    const activeColumn = leftColumn.innerHTML.includes('-') ? rightColumn : leftColumn;
 
-    const emptyDiv = document.createElement('div');
-    emptyDiv.className = 'meta-tag empty';
-    emptyDiv.innerHTML = '<em>Not present</em>';
-    rightColumn.appendChild(emptyDiv);
-  });
+    diff.onlyLeft.forEach(tag => {
+      const tagDiv = document.createElement('div');
+      tagDiv.className = 'meta-tag identical';
+      tagDiv.innerHTML = formatFunction(tag);
+      activeColumn.appendChild(tagDiv);
+    });
 
-  diff.onlyRight.forEach(tag => {
-    const emptyDiv = document.createElement('div');
-    emptyDiv.className = 'meta-tag empty';
-    emptyDiv.innerHTML = '<em>Not present</em>';
-    leftColumn.appendChild(emptyDiv);
+    diff.onlyRight.forEach(tag => {
+      const tagDiv = document.createElement('div');
+      tagDiv.className = 'meta-tag identical';
+      tagDiv.innerHTML = formatFunction(tag);
+      activeColumn.appendChild(tagDiv);
+    });
 
-    const tagDiv = document.createElement('div');
-    tagDiv.className = 'meta-tag only-right';
-    tagDiv.innerHTML = formatFunction(tag);
-    rightColumn.appendChild(tagDiv);
-  });
+    diff.identical.forEach(pair => {
+      const tagDiv = document.createElement('div');
+      tagDiv.className = 'meta-tag identical';
+      tagDiv.innerHTML = formatFunction(pair.left || pair.right);
+      activeColumn.appendChild(tagDiv);
+    });
 
-  diff.different.forEach(pair => {
-    const leftDiv = document.createElement('div');
-    leftDiv.className = 'meta-tag different';
-    leftDiv.innerHTML = formatFunction(pair.left);
-    leftColumn.appendChild(leftDiv);
+    diff.different.forEach(pair => {
+      const tagDiv = document.createElement('div');
+      tagDiv.className = 'meta-tag identical';
+      tagDiv.innerHTML = formatFunction(pair.left || pair.right);
+      activeColumn.appendChild(tagDiv);
+    });
+  } else {
+    // For two URLs, show comparison
+    diff.onlyLeft.forEach(tag => {
+      const tagDiv = document.createElement('div');
+      tagDiv.className = 'meta-tag only-left';
+      tagDiv.innerHTML = formatFunction(tag);
+      leftColumn.appendChild(tagDiv);
 
-    const rightDiv = document.createElement('div');
-    rightDiv.className = 'meta-tag different';
-    rightDiv.innerHTML = formatFunction(pair.right);
-    rightColumn.appendChild(rightDiv);
-  });
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'meta-tag empty';
+      emptyDiv.innerHTML = '<em>Not present</em>';
+      rightColumn.appendChild(emptyDiv);
+    });
 
-  diff.identical.forEach(pair => {
-    const leftDiv = document.createElement('div');
-    leftDiv.className = 'meta-tag identical';
-    leftDiv.innerHTML = formatFunction(pair.left);
-    leftColumn.appendChild(leftDiv);
+    diff.onlyRight.forEach(tag => {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'meta-tag empty';
+      emptyDiv.innerHTML = '<em>Not present</em>';
+      leftColumn.appendChild(emptyDiv);
 
-    const rightDiv = document.createElement('div');
-    rightDiv.className = 'meta-tag identical';
-    rightDiv.innerHTML = formatFunction(pair.right);
-    rightColumn.appendChild(rightDiv);
-  });
+      const tagDiv = document.createElement('div');
+      tagDiv.className = 'meta-tag only-right';
+      tagDiv.innerHTML = formatFunction(tag);
+      rightColumn.appendChild(tagDiv);
+    });
+
+    diff.different.forEach(pair => {
+      const leftDiv = document.createElement('div');
+      leftDiv.className = 'meta-tag different';
+      leftDiv.innerHTML = formatFunction(pair.left);
+      leftColumn.appendChild(leftDiv);
+
+      const rightDiv = document.createElement('div');
+      rightDiv.className = 'meta-tag different';
+      rightDiv.innerHTML = formatFunction(pair.right);
+      rightColumn.appendChild(rightDiv);
+    });
+
+    diff.identical.forEach(pair => {
+      const leftDiv = document.createElement('div');
+      leftDiv.className = 'meta-tag identical';
+      leftDiv.innerHTML = formatFunction(pair.left);
+      leftColumn.appendChild(leftDiv);
+
+      const rightDiv = document.createElement('div');
+      rightDiv.className = 'meta-tag identical';
+      rightDiv.innerHTML = formatFunction(pair.right);
+      rightColumn.appendChild(rightDiv);
+    });
+  }
 }
 
 function formatTagForMarkdown(tag) {

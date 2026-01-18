@@ -101,27 +101,43 @@ app.post('/api/compare', async (req, res) => {
   try {
     const { baseUrl1, baseUrl2, paths } = req.body;
 
-    if (!baseUrl1 || !baseUrl2 || !paths || !Array.isArray(paths)) {
+    if ((!baseUrl1 && !baseUrl2) || !paths || !Array.isArray(paths)) {
       return res.status(400).json({
-        error: 'Invalid request. Required: baseUrl1, baseUrl2, paths[]'
+        error: 'Invalid request. Required: at least one of baseUrl1 or baseUrl2, and paths[]'
       });
     }
 
     const comparisons = await Promise.all(
       paths.map(async (pathItem) => {
-        const url1 = baseUrl1.replace(/\/$/, '') + pathItem;
-        const url2 = baseUrl2.replace(/\/$/, '') + pathItem;
-
-        const [result1, result2] = await Promise.all([
-          fetchUrl(url1),
-          fetchUrl(url2)
-        ]);
-
-        return {
-          path: pathItem,
-          url1: result1,
-          url2: result2
+        const result = {
+          path: pathItem
         };
+
+        if (baseUrl1) {
+          const url1 = baseUrl1.replace(/\/$/, '') + pathItem;
+          result.url1 = await fetchUrl(url1);
+        } else {
+          result.url1 = {
+            url: null,
+            metaTags: [],
+            linkTags: [],
+            error: null
+          };
+        }
+
+        if (baseUrl2) {
+          const url2 = baseUrl2.replace(/\/$/, '') + pathItem;
+          result.url2 = await fetchUrl(url2);
+        } else {
+          result.url2 = {
+            url: null,
+            metaTags: [],
+            linkTags: [],
+            error: null
+          };
+        }
+
+        return result;
       })
     );
 
